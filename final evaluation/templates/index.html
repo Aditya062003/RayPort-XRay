@@ -22,10 +22,31 @@
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
+            .then(response => {
+                // Check if the response is a PDF
+                if (response.headers.get('content-type') === 'application/pdf') {
+                    return response.blob();
+                } else {
+                    return response.json();
+                }
+            })
             .then(data => {
                 var resultDiv = document.getElementById('result');
-                resultDiv.innerHTML = '<p>Prediction: ' + JSON.stringify(data.prediction) + '</p>';
+                
+                // Check if the response is a PDF
+                if (data instanceof Blob) {
+                    // Create a link to download the PDF
+                    var link = document.createElement('a');
+                    link.href = URL.createObjectURL(data);
+                    link.target = '_blank';
+                    link.download = 'result.pdf';
+                    link.innerHTML = 'Download PDF';
+                    resultDiv.innerHTML = '';
+                    resultDiv.appendChild(link);
+                } else {
+                    // Display the JSON result
+                    resultDiv.innerHTML = '<p>Prediction: ' + JSON.stringify(data.prediction) + '</p>';
+                }
             })
             .catch(error => console.error('Error:', error));
         }

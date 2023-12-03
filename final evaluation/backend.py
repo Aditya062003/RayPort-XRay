@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, send_file
 import tensorflow as tf
 import io
 from langchain.document_loaders import PyPDFLoader
@@ -11,6 +11,7 @@ from langchain.chains import ConversationalRetrievalChain
 import pinecone
 from dotenv import load_dotenv
 import os
+from reportlab.pdfgen import canvas
 
 app = Flask(__name__)
 load_dotenv()
@@ -48,6 +49,17 @@ def process_user_input(user_input):
     return result
 
 
+def generate_pdf(result, filename):
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer)
+
+    p.drawString(100, 800, f'Result: {result}')
+    p.save()
+    buffer.seek(0)
+
+    with open(filename, 'wb') as f:
+        f.write(buffer.read())
+
 def preprocess_image(image):
     image = tf.image.grayscale_to_rgb(image)
     image = tf.image.resize(image, [224, 224])
@@ -80,6 +92,11 @@ def predict():
     print("Predictions:", p)
     result = process_user_input(str(p))
     print(result)
+
+    pdf_filename = 'output.pdf'
+    generate_pdf(result, pdf_filename)
+
+    return send_file(pdf_filename, as_attachment=True)
 
     return jsonify({
         'prediction': result
