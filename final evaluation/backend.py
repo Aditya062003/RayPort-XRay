@@ -12,6 +12,7 @@ import pinecone
 from dotenv import load_dotenv
 import os
 from reportlab.pdfgen import canvas
+from weasyprint import HTML
 
 app = Flask(__name__)
 load_dotenv()
@@ -51,12 +52,10 @@ def process_user_input(user_input):
 
 def generate_pdf(result, filename):
     buffer = io.BytesIO()
-    p = canvas.Canvas(buffer)
+    html_content = f"<html><body>{result}</body></html>"
+    HTML(string=html_content).write_pdf(buffer)
 
-    p.drawString(100, 800, f'Result: {result}')
-    p.save()
     buffer.seek(0)
-
     with open(filename, 'wb') as f:
         f.write(buffer.read())
 
