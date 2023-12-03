@@ -21,7 +21,7 @@ function App() {
       const formData = new FormData();
       formData.append('file', file);
 
-      axios.post('http://localhost:5000/predict', formData)
+      axios.post('http://127.0.0.1:5000/predict', formData)
         .then(response => {
           setPrediction(response.data.prediction);
         })

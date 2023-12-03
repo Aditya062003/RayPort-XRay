@@ -13,8 +13,10 @@ from dotenv import load_dotenv
 import os
 from reportlab.pdfgen import canvas
 from weasyprint import HTML
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app, resources={r"/predict": {"origins": "http://localhost:3000"}})
 load_dotenv()
 
 model = tf.keras.models.load_model('model_DenseNet121_Full_Sample.h5')
@@ -96,12 +98,12 @@ def predict():
 
     pdf_filename = 'output.pdf'
     generate_pdf(result, pdf_filename)
-
+    return jsonify({
+            'prediction': p
+        })
     return send_file(pdf_filename, as_attachment=True)
 
-    return jsonify({
-        'prediction': result
-    })
+    
 
 
 if __name__ == '__main__':
