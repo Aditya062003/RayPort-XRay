@@ -11,26 +11,23 @@ function App() {
     const selectedFile = e.target.files[0];
     setFile(selectedFile);
 
-    // Create a preview URL for the selected image
+  
     const previewURL = URL.createObjectURL(selectedFile);
     setImagePreview(previewURL);
   };
 
   const handleSubmit = () => {
     if (file) {
-      // Image prediction
       const formData = new FormData();
       formData.append('file', file);
 
-      axios.post('https://stunning-memory-p5q9xwr677gf6rj9-5000.app.github.dev/predict', formData)
+      axios.post('http://localhost:5000/predict', formData)
         .then(response => {
           setPrediction(response.data.prediction);
         })
         .catch(error => console.error('Error:', error));
     } else if (textInput.trim() !== '') {
-      // Chat submission
       console.log('User typed:', textInput);
-      // Clear the text input field after submission
       setTextInput('');
     }
   };
