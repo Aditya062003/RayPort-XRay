@@ -45,7 +45,9 @@ memory = ConversationBufferMemory(memory_key="chat_history", return_messages=Tru
 chain = ConversationalRetrievalChain.from_llm(llm, retriever=retriever, memory=memory)
 
 def process_user_input(user_input):
-    query ='The array provided symbolizes if the user has potentially a chest selected medically condition ' + user_input
+    query ='''The array provided symbolizes if the user has potentially a chest selected medically condition. The array shows 1 if the user has the corresponding disease and 0 otherwise.
+    The order of diseases are No Finding, Enlarged Cardiomediastinum,Cardiomegaly,Lung Opacity,Lung Lesion,Edema,Consolidation,Pneumonia,Atelectasis,Pneumothorax,Pleural Effusion,Pleural Other,Fracture, Support Devices.
+    The following are some of the symptoms the user is facing: ''' + user_input
     result = chain.run({'question': query})
     return result
 
