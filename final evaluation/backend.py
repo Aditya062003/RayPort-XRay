@@ -15,10 +15,12 @@ from langchain.document_loaders import PyPDFLoader
 
 # from langchain.embeddings import Embeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Pinecone as PineconeStore
+from langchain_community.vectorstores import Pinecone
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from reportlab.pdfgen import canvas
 from weasyprint import HTML
+
+os.environ["PINECONE_API_KEY"] = "0e51bceb-f4be-436e-8ce6-7b3f37b379c9"
 
 app = Flask(__name__)
 CORS(app, resources={r"/predict": {"origins": "http://localhost:3000"}})
@@ -61,16 +63,16 @@ model_embed = "models/embedding-001"
 # )
 # retriever = vectordb.as_retriever()
 
-# embeddings = GoogleGenerativeAIEmbeddings(
-#     model="models/embedding-001",
-#     google_api_key="AIzaSyBODPD0qgF01nIW_XT4qcOUdSn3eQV1JAs",
-# )
+embeddings = GoogleGenerativeAIEmbeddings(
+    model="models/embedding-001",
+    google_api_key="AIzaSyBODPD0qgF01nIW_XT4qcOUdSn3eQV1JAs",
+)
 
-# pinecone.init(api_key="81bb5c61-f14b-43ad-8f3e-0c39e57fbc00")
-# index_name = pinecone.Index("lung-disease-1")
-# # # print(index_name)
-# vectordb = PineconeStore.from_documents(
-#     documents=texts, embedding=embeddings, index_name="lung-disease-1"
+# pinecone.init(api_key="0e51bceb-f4be-436e-8ce6-7b3f37b379c9")
+# index_name = Pinecone.index("lung-disease")
+# # print(index_name)
+# vectordb = Pinecone.from_documents(
+#     index_name="lung-disease", documents=texts, embedding=embeddings
 # )
 # retriever = vectordb.as_retriever()
 
@@ -89,7 +91,7 @@ model_embed = "models/embedding-001"
 # chain = ConversationalRetrievalChain.from_llm(llm, retriever=retriever, memory=memory)
 
 
-def process_user_input(user_input):
+def process_user_input(user_input, text_user):
     if len(user_input) == 0:
         query = """
 """
@@ -97,7 +99,9 @@ def process_user_input(user_input):
         """The array provided symbolizes if the user has potentially a chest selected medically condition. The array shows 1 if the user has the corresponding disease and 0 otherwise.
     The order of diseases are No Finding, Enlarged Cardiomediastinum,Cardiomegaly,Lung Opacity,Lung Lesion,Edema,Consolidation,Pneumonia,Atelectasis,Pneumothorax,Pleural Effusion,Pleural Other,Fracture, Support Devices. Based on the diseases from the array and the symptoms the user is showing, provide all the diseases and list down their symptoms, what are possible lifestyle changes and what can be the possible treatments for this.
     The order of diseases are No Finding, Enlarged Cardiomediastinum,Cardiomegaly,Lung Opacity,Lung Lesion,Edema,Consolidation,Pneumonia,Atelectasis,Pneumothorax,Pleural Effusion,Pleural Other,Fracture, Support Devices. Based on the diseases from the array and the symptoms the user is showing, provide all the diseases and list down their symptoms, what are possible lifestyle changes and what can be the possible treatments for this.
-    The following are some of the symptoms the user is facing: """
+    The following are some of the symptoms the user is facing, explain the user more about these symptoms and how to cure them: """
+        + text_user
+        + """The array indicating the presence of diseases is as follows: """
         + user_input
     )
     result = model.generate_content(query)
@@ -165,12 +169,14 @@ def index():
 @app.route("/predict", methods=["POST"])
 def predict():
     file = request.files["file"]
+    text_user = request.form["text"]
+    print("User input text:", text_user)
     image_data = file.read()
 
     p = predict_label(image_data)
 
     print("Predictions:", p)
-    result = process_user_input(str(p))
+    result = process_user_input(str(p), str(text_user))
     print(result)
 
     pdf_content = generate_pdf_content(result)
