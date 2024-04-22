@@ -7,13 +7,11 @@ import google.generativeai as genai
 import pinecone
 import tensorflow as tf
 
-# from gemini.client import GeminiAPIClient  # Importing Gemini API client
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request, send_file
 from flask_cors import CORS
 from langchain.document_loaders import PyPDFLoader
 
-# from langchain.embeddings import Embeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Pinecone
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
@@ -40,55 +38,23 @@ texts = text_splitter.split_documents(data)
 page_contents = [doc.page_content for doc in texts]
 page_contents_pinecone = [str(content) for content in page_contents]
 
-
-# Step 2: Preprocess the page_content if needed
-# Example preprocessing (you might need more depending on your requirements)
 preprocessed_page_contents = [page_content.lower() for page_content in page_contents]
 
-# gemini_client = GeminiAPIClient(api_key='AIzaSyBODPD0qgF01nIW_XT4qcOUdSn3eQV1JAs', environment='gcp-starter')
+
 genai.configure(api_key="AIzaSyBODPD0qgF01nIW_XT4qcOUdSn3eQV1JAs")
 model = genai.GenerativeModel("gemini-pro")
 model_embed = "models/embedding-001"
-# embeddings = genai.embed_content(
-#     content=page_contents,
-#     model=model_embed,
-#     task_type="retrieval_document",
-# )["embedding"]
-
-# # Assuming Gemini API provides a method for text embeddings
-# # embeddings = gemini_client.get_text_embeddings(texts)
-# index_name = 'lung-disease'
-# vectordb = Pinecone.from_documents(
-#     page_contents_pinecone, embeddings, index_name=index_name
-# )
-# retriever = vectordb.as_retriever()
-
+pinconde_index_list = ['us-west-1a']
 embeddings = GoogleGenerativeAIEmbeddings(
     model="models/embedding-001",
     google_api_key="AIzaSyBODPD0qgF01nIW_XT4qcOUdSn3eQV1JAs",
 )
 
-# pinecone.init(api_key="0e51bceb-f4be-436e-8ce6-7b3f37b379c9")
-# index_name = Pinecone.index("lung-disease")
-# # print(index_name)
-# vectordb = Pinecone.from_documents(
-#     index_name="lung-disease", documents=texts, embedding=embeddings
-# )
-# retriever = vectordb.as_retriever()
-
+index_name = "lung_disease"
 # Create and configure index if doesn't already exist
-# if index_name not in pinecone.list_indexes():
-#     pinecone.create_index(name=index_name, metric="cosine", dimension=1536)
-#     docsearch = Pinecone.from_documents(docs, embeddings, index_name=index_name)
-
-# else:
-#     docsearch = Pinecone.from_existing_index(index_name, embeddings)
-
-
-# llm = ChatOpenAI(model_name='gpt-3.5-turbo', temperature=0)
-
-# memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-# chain = ConversationalRetrievalChain.from_llm(llm, retriever=retriever, memory=memory)
+if index_name in pinconde_index_list:
+    pinecone.create_index(name=index_name, metric="cosine", dimension=1536)
+    docsearch = Pinecone.from_documents(texts, embeddings, index_name=index_name)
 
 
 def process_user_input(user_input, text_user):
@@ -105,9 +71,6 @@ def process_user_input(user_input, text_user):
         + user_input
     )
     result = model.generate_content(query)
-    # text_content = "".join(
-    #     [part["text"] for part in result.candidates[0].content.parts]
-    # )
     print(result)
     return result
 
@@ -116,10 +79,8 @@ def generate_pdf_content(result):
     parts = result._result.candidates[0].content.parts
     text_content = "\n\n".join(part.text for part in parts)
 
-    # Replace ** with <b> and </b> for bold formatting
     text_content = re.sub(r"\*\*(.*?)\*\*", r"<b>\1</b>", text_content)
 
-    # Replace newline characters with HTML line breaks
     text_content = text_content.replace("\n", "<br>")
 
     buffer = io.BytesIO()
@@ -188,9 +149,6 @@ def predict():
 def output():
     pdf_filename = "output.pdf"
     return send_file(pdf_filename, as_attachment=True)
-
-    # The following line is removed, as it was unreachable code
-    # return send_file(pdf_filename, as_attachment=True)
 
 
 if __name__ == "__main__":
