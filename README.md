@@ -38,6 +38,8 @@ The objective of this project is to create a portal which will take in the patie
 <img src="https://github.com/adismort14/CS550-project/assets/102402625/c0b1473d-7b7d-4d68-8c43-87c8ca4cd170" width="400"/><br/>
 <img src="https://github.com/adismort14/CS550-project/assets/102402625/14612993-1321-4d6d-b9b4-4ae970f538de" width="400"/><br/>
 
+### TODO: Attach demo video here.
+
 
 
 Our project represents a significant advancement in medical diagnostics, providing a user-friendly portal with intelligent diagnostic capabilities, thereby enhancing patient care through technology.
